@@ -6,8 +6,8 @@ import com.dziedzic.view.AGH_gomoku;
 
 public class DesktopLauncher {
 
-	public static final int WIDTH = 800;
-	public static final int HEIGHT = 600;
+	public static final int WIDTH = 1200;
+	public static final int HEIGHT = 1200;
 	public static final String gameTitle = "gomoku";
 
 	public static void main(String[] arg) {

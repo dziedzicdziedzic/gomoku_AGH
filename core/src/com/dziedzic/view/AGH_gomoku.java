@@ -2,17 +2,16 @@ package com.dziedzic.view;
 
 import com.badlogic.gdx.ApplicationAdapter;
 import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.Texture;
+import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.Sprite;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
-import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.scenes.scene2d.InputEvent;
 import com.badlogic.gdx.scenes.scene2d.Stage;
-import com.badlogic.gdx.scenes.scene2d.ui.ImageButton;
 import com.badlogic.gdx.scenes.scene2d.utils.ClickListener;
 import com.badlogic.gdx.scenes.scene2d.utils.SpriteDrawable;
-import com.badlogic.gdx.scenes.scene2d.utils.TextureRegionDrawable;
 import com.badlogic.gdx.utils.viewport.ScreenViewport;
 import com.dziedzic.controller.MinMax;
 import com.dziedzic.model.Board;
@@ -24,12 +23,13 @@ import java.util.LinkedList;
 public class AGH_gomoku extends ApplicationAdapter {
     SpriteBatch batch;
     Board board;
-    int boardSize = 15;
+    int boardSize = 30;
     LinkedList<CustomButton> buttonList;
     Stage stage;
     String blankPath, xPath, oPath;
     Texture blankTexture, oTexture, xTexture;
     boolean opponentTurn = false;
+    private BitmapFont gameOverDisplay;
 
     @Override
     public void create() {
@@ -40,6 +40,10 @@ public class AGH_gomoku extends ApplicationAdapter {
 //        board.addField(new Field(0,0,Board.State.O_TAKEN));
 //        board.addField(new Field(4,7,Board.State.X_TAKEN));
         stage = new Stage(new ScreenViewport());
+
+        gameOverDisplay = new BitmapFont();
+        gameOverDisplay.setColor(Color.WHITE);
+        gameOverDisplay.getData().setScale(1.2f);
 
         blankPath = "/home/dziedzic/IdeaProjects/gomoku/core/src/com/dziedzic/view/assets/blank_asset.bmp";
         xPath = "/home/dziedzic/IdeaProjects/gomoku/core/src/com/dziedzic/view/assets/x_asset.bmp";
@@ -56,10 +60,15 @@ public class AGH_gomoku extends ApplicationAdapter {
 
     @Override
     public void render() {
-        Gdx.gl.glClearColor(1, 0, 0, 1);
+        Gdx.gl.glClearColor(0, 0, 0, 1);
         Gdx.gl.glClear(GL20.GL_COLOR_BUFFER_BIT);
         batch.begin();
         //System.out.println("XX");
+        if (Board.isGameOver()) {
+            buttonList.forEach(btn -> btn.setVisible(false));
+            gameOverDisplay.draw(batch, "Game Over", 500, 500);
+
+        }
         if(opponentTurn) {
             for (CustomButton btn2 : buttonList) {
                 if (board.getLastAdded().getxPos() == btn2.getxPos() && board.getLastAdded().getyPos() == btn2.getyPos()) {
@@ -73,7 +82,9 @@ public class AGH_gomoku extends ApplicationAdapter {
                     }
                 }
             }
+            board.checkForWin(board.getLastAdded());
             opponentTurn=false;
+
         }
        // renderBoard();
         //batch.draw(img, 0, 0);
@@ -112,9 +123,9 @@ public class AGH_gomoku extends ApplicationAdapter {
                 btnX.setSize(30,30);
                 btnO.setSize(30,30);
 
-                btnBlank.setPosition(30*i, 570 - 30*j);
-                btnX.setPosition(30*i, 570 - 30*j);
-                btnO.setPosition(30*i, 570 - 30*j);
+                btnBlank.setPosition(30 * i, 1170 - 30 * j);
+                btnX.setPosition(30 * i, 1170 - 30 * j);
+                btnO.setPosition(30 * i, 1170 - 30 * j);
 
                 btnBlank.setState(Board.State.BLANK);
                 btnX.setState(Board.State.X_TAKEN);
@@ -134,6 +145,7 @@ public class AGH_gomoku extends ApplicationAdapter {
                         MinMax.minmax(board,0);
                         System.out.println(board.getLastAdded().getState());
                         System.out.println(board.getLastAdded().getxPos() +" " + board.getLastAdded().getyPos());
+                        board.checkForWin(board.getLastAdded());
                         opponentTurn=true;
                     }
                 });
