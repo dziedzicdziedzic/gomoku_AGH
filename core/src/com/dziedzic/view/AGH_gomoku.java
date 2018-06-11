@@ -19,8 +19,10 @@ import com.dziedzic.model.CustomButton;
 import com.dziedzic.model.Field;
 
 import java.util.LinkedList;
+import java.util.concurrent.ForkJoinPool;
 
 public class AGH_gomoku extends ApplicationAdapter {
+    static int WIDTH = 870;
     SpriteBatch batch;
     Board board;
     int boardSize = 30;
@@ -30,6 +32,7 @@ public class AGH_gomoku extends ApplicationAdapter {
     Texture blankTexture, oTexture, xTexture;
     boolean opponentTurn = false;
     private BitmapFont gameOverDisplay;
+    ForkJoinPool fjp = new ForkJoinPool(8);
 
     @Override
     public void create() {
@@ -65,19 +68,20 @@ public class AGH_gomoku extends ApplicationAdapter {
         batch.begin();
         //System.out.println("XX");
         if (Board.isGameOver()) {
-            buttonList.forEach(btn -> btn.setVisible(false));
-            gameOverDisplay.draw(batch, "Game Over", 500, 500);
+            //buttonList.forEach(btn -> btn.setVisible(false));
+
+            gameOverDisplay.draw(batch, "Game Over", 1000, WIDTH);
 
         }
         if(opponentTurn) {
             for (CustomButton btn2 : buttonList) {
                 if (board.getLastAdded().getxPos() == btn2.getxPos() && board.getLastAdded().getyPos() == btn2.getyPos()) {
                     if (btn2.getState() == Board.State.BLANK){
-                        System.out.println("blank");
+                        //System.out.println("blank");
                         btn2.setVisible(false);
                     }
                     if (btn2.getState() == Board.State.O_TAKEN){
-                        System.out.println("ooo");
+                        //System.out.println("ooo");
                         btn2.setVisible(true);
                     }
                 }
@@ -123,9 +127,9 @@ public class AGH_gomoku extends ApplicationAdapter {
                 btnX.setSize(30,30);
                 btnO.setSize(30,30);
 
-                btnBlank.setPosition(30 * i, 1170 - 30 * j);
-                btnX.setPosition(30 * i, 1170 - 30 * j);
-                btnO.setPosition(30 * i, 1170 - 30 * j);
+                btnBlank.setPosition(30 * i, WIDTH - 30 * j);
+                btnX.setPosition(30 * i, WIDTH - 30 * j);
+                btnO.setPosition(30 * i, WIDTH - 30 * j);
 
                 btnBlank.setState(Board.State.BLANK);
                 btnX.setState(Board.State.X_TAKEN);
@@ -138,15 +142,20 @@ public class AGH_gomoku extends ApplicationAdapter {
 
                 btnBlank.addListener(new ClickListener() {
                     public void clicked(InputEvent event, float x, float y){
-                        board.addField(new Field(btnBlank.getxPos(), btnBlank.getyPos(), Board.State.X_TAKEN));
-                        btnBlank.setVisible(false);
-                        btnX.setVisible(true);
-                        System.out.println("in");
-                        MinMax.minmax(board,0);
-                        System.out.println(board.getLastAdded().getState());
-                        System.out.println(board.getLastAdded().getxPos() +" " + board.getLastAdded().getyPos());
-                        board.checkForWin(board.getLastAdded());
-                        opponentTurn=true;
+                        if (!Board.isGameOver()) {
+                            board.addField(new Field(btnBlank.getxPos(), btnBlank.getyPos(), Board.State.X_TAKEN));
+                            btnBlank.setVisible(false);
+                            btnX.setVisible(true);
+                            board.checkForWin(board.getLastAdded());
+                            if (!Board.isGameOver()) {
+                                MinMax minMax = new MinMax(board, 0);
+                                fjp.invoke(minMax);
+                                System.out.println(board.getLastAdded().getState());
+                                System.out.println(board.getLastAdded().getxPos() + " " + board.getLastAdded().getyPos());
+                                board.checkForWin(board.getLastAdded());
+                                opponentTurn = true;
+                            }
+                        }
                     }
                 });
 
